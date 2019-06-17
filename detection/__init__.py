@@ -44,6 +44,7 @@ class Motion:
         self._foreground = self.compress(foreground)
 
     def detect(self, image):
+        assert self._background is not None and self._foreground is not None
         assert np.all(image.shape[:2] == self._image_size)
 
         image = self.compress(image)
@@ -60,3 +61,51 @@ class Motion:
 
         return [self.uncompress_rect(cv2.boundingRect(contour))
                 for contour in contours if cv2.contourArea(contour) >= self._min_area]
+
+
+class Face:
+    def __init__(self, threshold, scale_factor=1.):
+        assert 0. < threshold <= 1.
+
+        self._threshold = threshold
+        self._scale_factor = scale_factor
+
+        self._network = None
+        self._mean = None
+
+    def reset(self, prototxt_filename, model_filename, mean):
+        self._network = cv2.dnn.readNetFromCaffe(prototxt_filename, model_filename)
+        self._mean = mean
+
+    def detect(self, image):
+        assert self._network is not None
+
+        height, width = image.shape[:2]
+
+        blob = cv2.dnn.blobFromImage(image, self._scale_factor, (width, height), self._mean)
+        self._network.setInput(blob)
+
+        detections = self._network.forward()
+
+        rects = []
+        for i in range(0, detections.shape[2]):
+            # filter out weak detections by ensuring the predicted
+            # probability is greater than a minimum threshold
+            if detections[0, 0, i, 2] > self._threshold:
+                # compute the (x, y)-coordinates of the bounding box for
+                # the object, then update the bounding box rectangles list
+                x, y, end_x, end_y = detections[0, 0, i, 3:7] * np.array([width, height, width, height])
+
+                # cut by image size
+                # TODO: use numpy operations
+                x = max(x, 0.)
+                y = max(y, 0.)
+                end_x = max(x, min(end_x, float(width - 1)))
+                end_y = max(y, min(end_y, float(height - 1)))
+
+                w = end_x - x
+                h = end_y - y
+                if w != 0 and h != 0:
+                    rects.append((int(x), int(y), int(w), int(h)))
+
+        return rects
