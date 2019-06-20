@@ -6,46 +6,46 @@ logger = logging.getLogger('detection')
 
 
 class Motion:
-    def __init__(self, background_alpha, foreground_alpha, threshold, blur_size, min_area, compress_size=None):
+    def __init__(self, image_size, background_alpha, foreground_alpha, threshold, blur_size, min_area, compress_size=None):
         assert 0. < background_alpha < 1.
         assert 0. < foreground_alpha < 1.
 
+        self._image_size = image_size
         self._background_alpha = background_alpha
         self._foreground_alpha = foreground_alpha
         self._threshold = threshold
         self._blur_size = blur_size
         self._min_area = min_area
         self._compress_size = compress_size
-        self._uncompress_scale = None
+        self._uncompress_scale = None if self._compress_size is None else \
+            (self._image_size[0] / self._compress_size[0], self._image_size[1] / self._compress_size[1])
 
-        self._image_size = None
         self._background = None
         self._foreground = None
 
     def compress(self, image):
         grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        return grayscale_image if self._compress_size is None else cv2.resize(grayscale_image,
-                                                                              (self._compress_size[1], self._compress_size[0]))
+        return grayscale_image if self._compress_size is None else cv2.resize(grayscale_image, self._compress_size)
 
     def uncompress_rect(self, rect):
-        return rect if self._uncompress_scale is None else ((int(rect[0] * self._uncompress_scale[1]),
-                                                            int(rect[1] * self._uncompress_scale[0]),
-                                                            int(rect[2] * self._uncompress_scale[1]),
-                                                            int(rect[3] * self._uncompress_scale[0])))
+        return rect if self._uncompress_scale is None else ((int(rect[0] * self._uncompress_scale[0]),
+                                                            int(rect[1] * self._uncompress_scale[1]),
+                                                            int(rect[2] * self._uncompress_scale[0]),
+                                                            int(rect[3] * self._uncompress_scale[1])))
 
     def reset(self, background, foreground):
-        assert background.shape == foreground.shape
-
-        self._image_size = background.shape[:2]
-        self._uncompress_scale = None if self._compress_size is None else \
-            (self._image_size[0] / self._compress_size[0], self._image_size[1] / self._compress_size[1])
+        assert background.shape[1::-1] == self._image_size
+        assert foreground.shape[1::-1] == self._image_size
 
         self._background = self.compress(background)
         self._foreground = self.compress(foreground)
 
     def detect(self, image):
-        assert self._background is not None and self._foreground is not None
-        assert np.all(image.shape[:2] == self._image_size)
+        assert self._background is not None
+        assert self._foreground is not None
+
+        height, width = image.shape[:2]
+        assert (width, height) == self._image_size
 
         image = self.compress(image)
         self._background = self._background_alpha * self._background + (1. - self._background_alpha) * image
@@ -64,21 +64,21 @@ class Motion:
 
 
 class Face:
-    def __init__(self, threshold, scale_factor=1.):
+    def __init__(self, image_size, prototxt_filename, model_filename, mean, threshold, scale_factor=1.):
         assert 0. < threshold <= 1.
 
+        self._image_size = image_size
+        self._network = cv2.dnn.readNetFromCaffe(prototxt_filename, model_filename)
+        self._mean = mean
         self._threshold = threshold
         self._scale_factor = scale_factor
 
-        self._network = None
-        self._mean = None
-
-    def reset(self, prototxt_filename, model_filename, mean):
-        self._network = cv2.dnn.readNetFromCaffe(prototxt_filename, model_filename)
-        self._mean = mean
+    @property
+    def image_size(self):
+        return self._image_size
 
     def detect(self, image):
-        assert self._network is not None
+        assert image.shape[1::-1] == self._image_size
 
         height, width = image.shape[:2]
 
