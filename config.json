@@ -1,0 +1,29 @@
+{
+  "stream": {
+    "width": 1920,
+    "height": 1080
+  },
+  "logging": {        
+        "version": 1,
+        "disable_existing_loggers": 0,
+        "formatters": {
+            "default": {
+                "format": "[%(asctime)s][%(levelname)s][%(name)s] %(message)s",
+                "datefmt":  "%H:%M:%S"
+            }
+        },
+        "handlers": {
+            "console": {
+                "level": "DEBUG",
+              "formatter": "default",
+              "class": "logging.StreamHandler"
+            }
+        },
+        "loggers": {
+          "": {
+            "level": "DEBUG",
+            "handlers": ["console"]
+          }
+        }
+    }
+}
