@@ -20,7 +20,7 @@
   },
   "centroid_tracker": {
     "max_disappeared": 20,
-    "max_distance": 100
+    "max_distance": 300
   },
 
   "logging": {        

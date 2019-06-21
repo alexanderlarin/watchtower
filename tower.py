@@ -53,7 +53,7 @@ if __name__ == '__main__':
         logger.info('init cgi video stream')
         stream = CgiStream(args.url, args.username, args.password)
     else:
-        raise ValueError(f'stream parameter {args.stream} is not valid')
+        raise ValueError('stream parameter {arg} is not valid'.format(arg=args.stream))
 
     logger.info('init watch queue')
     watch_queue = multiprocessing.Queue()
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     height, width = image.shape[:2]
     detector_sizes = [(width // 4, height // 2), (width // 2, height), (width, height)]
-    logger.info(f'detector sizes: {detector_sizes}')
+    logger.info('detector sizes: {detector_sizes}'.format(detector_sizes=detector_sizes))
 
     logger.info('init watch process')
     watch_process = multiprocessing.Process(target=watch_loop, args=(config, watch_queue, detector_sizes,))
