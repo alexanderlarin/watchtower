@@ -71,8 +71,7 @@ if __name__ == '__main__':
     watch_process.start()
 
     logger.info('init motion detector')
-    motion = Motion(image_size=(width, height), background_alpha=.9, foreground_alpha=.1,
-                    threshold=10, blur_size=5, min_area=1000, compress_size=(320, 270))
+    motion = Motion(image_size=(width, height), **config['motion_detector'])
 
     logger.info('reset motion detector')
     motion.reset(image, image)

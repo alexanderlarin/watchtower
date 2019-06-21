@@ -12,14 +12,10 @@ def watch_loop(config, frame_queue, detector_sizes):
     logging.config.dictConfig(config['logging'])
 
     logger.info(f'init face detectors: {len(detector_sizes)}')
-    face_detectors = [Face(size,
-                           'network_models/deploy.prototxt',
-                           'network_models/res10_300x300_ssd_iter_140000.caffemodel',
-                           (104.0, 177.0, 123.0),
-                           threshold=.4, scale_factor=1.) for size in detector_sizes]
+    face_detectors = [Face(size, **config['face_detector']) for size in detector_sizes]
 
-    logger.info('init face tacker')
-    face_tracker = CentroidTracker(max_disappeared=50, max_distance=75)
+    logger.info('init centroid tacker')
+    centroid_tracker = CentroidTracker(**config['centroid_tracker'])
 
     frame_counter = 0
     while True:
@@ -34,8 +30,8 @@ def watch_loop(config, frame_queue, detector_sizes):
         frame_x, frame_y = frame.position
         face_origin_rects = [(frame_x + x, frame_y + y, w, h) for x, y, w, h in face_rects]
 
-        logger.info(f'update face tacker frame: {frame_counter} {frame.size}, faces: {len(face_rects)}')
-        objs = face_tracker.update(face_origin_rects)
+        logger.info(f'update centroid tacker frame: {frame_counter} {frame.size}, faces: {len(face_rects)}')
+        objs = centroid_tracker.update(face_origin_rects)
 
         draw_image = frame.image.copy()
         for x, y, w, h in face_rects:

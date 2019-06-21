@@ -16,7 +16,7 @@ class Motion:
         self._threshold = threshold
         self._blur_size = blur_size
         self._min_area = min_area
-        self._compress_size = compress_size
+        self._compress_size = tuple(compress_size)
         self._uncompress_scale = None if self._compress_size is None else \
             (self._image_size[0] / self._compress_size[0], self._image_size[1] / self._compress_size[1])
 

@@ -3,6 +3,26 @@
     "width": 1920,
     "height": 1080
   },
+  "face_detector": {
+    "prototxt_filename": "network_models/deploy.prototxt",
+    "model_filename": "network_models/res10_300x300_ssd_iter_140000.caffemodel",
+    "mean": [104.0, 177.0, 123.0],
+    "threshold":  0.4,
+    "scale_factor": 1.0
+  },
+  "motion_detector": {
+    "background_alpha": 0.9,
+    "foreground_alpha": 0.1,
+    "threshold": 20,
+    "blur_size": 5,
+    "min_area": 1500,
+    "compress_size": [320, 270]
+  },
+  "centroid_tracker": {
+    "max_disappeared": 20,
+    "max_distance": 100
+  },
+
   "logging": {        
         "version": 1,
         "disable_existing_loggers": 0,
