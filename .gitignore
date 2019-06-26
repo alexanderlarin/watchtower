@@ -1,4 +1,6 @@
 .idea/
 .venv/
-__pycache__
+images/
 samples/
+
+__pycache__

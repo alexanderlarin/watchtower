@@ -33,7 +33,6 @@ def watch_loop(config, connection, queue):
 
     def handle_message(body, message):
         frame = Frame.from_json(body)
-        message.ack()
 
         face_detector = next((d for d in face_detectors if d.image_size == frame.size), None)
         face_rects = face_detector.detect(frame.image)
@@ -55,6 +54,8 @@ def watch_loop(config, connection, queue):
                         (0, 255, 0), 2)
             cv2.circle(draw_image, (x, y), 4, (0, 255, 0), -1)
         cv2.imwrite(os.path.join(detections_dir, '{id}.png'.format(id=uuid.uuid4())), draw_image)
+
+        message.ack()
 
     logger.info('init queue consumer')
     with Consumer(connection, queue, callbacks=[handle_message]):

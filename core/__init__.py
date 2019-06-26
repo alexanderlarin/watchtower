@@ -26,7 +26,7 @@ class Frame:
         return self._x, self._y, self._w, self._h
 
     def cut(self, x, y, w, h):
-        return Frame(self._image[y:y + h, x: x + w], x + self._x, y + self._y, w, h)
+        return Frame(self._image[y:y + h, x: x + w, :], x + self._x, y + self._y, w, h)
 
     def fit_cut(self, x, y, w, h, cut_sizes):
         f_w, f_h = next(((s_w, s_h) for s_w, s_h in cut_sizes if w <= s_w and h <= s_w), (w, h))
@@ -46,10 +46,13 @@ class Frame:
 
     def to_json(self):
         return {
-            'image': self._image.tolist(),
+            'image': self._image.tobytes().decode('latin-1'),
             'x': self._x, 'y': self._y, 'w': self._w, 'h': self._h
         }
 
     @classmethod
     def from_json(cls, data):
-        return cls(np.array(data['image'], dtype=np.uint8), data['x'], data['y'], data['w'], data['h'])
+        w = data['w']
+        h = data['h']
+        return cls(np.frombuffer(data['image'].encode('latin-1'), dtype=np.uint8).reshape([h, w, 3]),
+                   data['x'], data['y'], w, h)
