@@ -1,6 +1,6 @@
 import logging
+import cv2
 import numpy as np
-import cv2.cv2 as cv2
 
 logger = logging.getLogger('detection')
 
@@ -57,7 +57,7 @@ class Motion:
         _, difference_image = cv2.threshold(difference_image, self._threshold,
                                             np.iinfo(difference_image.dtype).max, cv2.THRESH_BINARY)
 
-        contours, _ = cv2.findContours(difference_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        _, contours, _ = cv2.findContours(difference_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         return [self.uncompress_rect(cv2.boundingRect(contour))
                 for contour in contours if cv2.contourArea(contour) >= self._min_area]

@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Frame:
     def __init__(self, image, x, y, w, h):
         self._image = image
@@ -18,6 +21,10 @@ class Frame:
     def size(self):
         return self._w, self._h
 
+    @property
+    def bounds(self):
+        return self._x, self._y, self._w, self._h
+
     def cut(self, x, y, w, h):
         return Frame(self._image[y:y + h, x: x + w], x + self._x, y + self._y, w, h)
 
@@ -36,3 +43,13 @@ class Frame:
         h = f_h
 
         return self.cut(x, y, w, h)
+
+    def to_json(self):
+        return {
+            'image': self._image.tolist(),
+            'x': self._x, 'y': self._y, 'w': self._w, 'h': self._h
+        }
+
+    @classmethod
+    def from_json(cls, data):
+        return cls(np.array(data['image'], dtype=np.uint8), data['x'], data['y'], data['w'], data['h'])

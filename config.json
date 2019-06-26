@@ -1,7 +1,11 @@
 {
   "stream": {
-    "width": 1920,
-    "height": 1080
+    "size": [640, 480],
+    "cuts": [
+      [0.25, 0.5],
+      [0.5, 1.0],
+      [1.0, 1.0]
+    ]
   },
   "face_detector": {
     "prototxt_filename": "network_models/deploy.prototxt",

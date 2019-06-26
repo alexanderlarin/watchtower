@@ -1,10 +1,9 @@
 import argparse
 import json
 import logging.config
-import multiprocessing
+from kombu import Connection, Exchange, Queue
 
-from core import Frame
-from detection import Motion
+from grab import grab_loop
 from streams import CgiStream, Cv2Stream
 from watch import watch_loop
 
@@ -16,7 +15,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Motion detection, people tracking and counting, '
                                                  'face, age and gender recognition service',
                                      epilog='Let the tool do the work!', )
-    parser.add_argument('--config', default='config.json', help='the path to JSON-formatted configuration file')
+    parser.add_argument('--config', default='config.json',
+                        help='the path to JSON-formatted configuration file')
+    parser.add_argument('--broker-url', default='redis://localhost:6379/',
+                        help='the connection url for MQ broker')
 
     sub_parsers = parser.add_subparsers(title='Streams', dest='stream')
 
@@ -30,6 +32,8 @@ if __name__ == '__main__':
     cv2_parser = sub_parsers.add_parser('cv2')
     cv2_parser.add_argument('--camera')
     cv2_parser.add_argument('--file')
+
+    watch_parser = sub_parsers.add_parser('watch')
 
     args = parser.parse_args()
 
@@ -48,50 +52,22 @@ if __name__ == '__main__':
     # TODO: it's a fucking params hell
     if args.stream == 'cv2':
         logger.info('init cv2 video stream')
-        stream = Cv2Stream(args.file or int(args.camera))
+        video_stream = Cv2Stream(args.file or int(args.camera))
     elif args.stream == 'cgi':
         logger.info('init cgi video stream')
-        stream = CgiStream(args.url, args.username, args.password)
+        video_stream = CgiStream(args.url, args.username, args.password)
     else:
-        raise ValueError('stream parameter {arg} is not valid'.format(arg=args.stream))
+        video_stream = None
 
-    logger.info('init watch queue')
-    watch_queue = multiprocessing.Queue()
+    logger.info('connect to {broker_url}'.format(broker_url=args.broker_url))
 
-    image = stream.read()
+    #: By default messages sent to exchanges are persistent (delivery_mode=2),
+    #: and queues and exchanges are durable.
+    exchange = Exchange('watch_tower', type='direct')
+    queue = Queue(exchange=exchange, exclusive=True)
 
-    height, width = image.shape[:2]
-    detector_sizes = [(width // 4, height // 2), (width // 2, height), (width, height)]
-    logger.info('detector sizes: {detector_sizes}'.format(detector_sizes=detector_sizes))
-
-    logger.info('init watch process')
-    watch_process = multiprocessing.Process(target=watch_loop, args=(config, watch_queue, detector_sizes,))
-
-    logger.info('start watch process')
-    watch_process.start()
-
-    logger.info('init motion detector')
-    motion = Motion(image_size=(width, height), **config['motion_detector'])
-
-    logger.info('reset motion detector')
-    motion.reset(image, image)
-
-    while True:
-        image = stream.read()
-        if image is None:
-            break
-
-        frame = Frame(image, 0, 0, width, height)
-        rects = motion.detect(frame.image)
-
-        if len(rects):
-            # TODO: use biggest rect, not a first
-            motion_frame = frame.fit_cut(*rects[0], detector_sizes)
-            watch_queue.put(motion_frame)
-
-    stream.close()
-    watch_queue.put(None)  # poison pill to end the queue
-    logger.info('end video stream')
-
-    watch_process.join()
-    logger.info('end watch queue')
+    with Connection(args.broker_url) as connection:
+        if video_stream is not None:
+            grab_loop(config, video_stream, connection, exchange)
+        else:
+            watch_loop(config, connection, queue)
