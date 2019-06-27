@@ -68,6 +68,7 @@ if __name__ == '__main__':
 
     with Connection(args.broker_url) as connection:
         if video_stream is not None:
-            grab_loop(config, video_stream, connection, exchange)
+            with connection.channel() as channel:
+                grab_loop(config, video_stream, channel, exchange)
         else:
             watch_loop(config, connection, queue)

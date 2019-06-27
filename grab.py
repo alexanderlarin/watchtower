@@ -7,9 +7,9 @@ from detection import Motion
 logger = logging.getLogger('grab')
 
 
-def grab_loop(config, stream, connection, exchange):
+def grab_loop(config, stream, channel, exchange):
     logger.info('init queue producer')
-    producer = Producer(connection)
+    producer = Producer(channel)
 
     width, height = config['stream']['size']
     logger.info('stream size: {size}'.format(size=(width, height)))
