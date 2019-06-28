@@ -67,8 +67,11 @@ if __name__ == '__main__':
     queue = Queue(exchange=exchange, exclusive=True)
 
     with Connection(args.broker_url) as connection:
-        if video_stream is not None:
-            with connection.channel() as channel:
-                grab_loop(config, video_stream, channel, exchange)
-        else:
-            watch_loop(config, connection, queue)
+        try:
+            if video_stream is not None:
+                with connection.channel() as channel:
+                    grab_loop(config, video_stream, channel, exchange)
+            else:
+                watch_loop(config, connection, queue)
+        except KeyboardInterrupt:
+            logger.info('interrupt watching')

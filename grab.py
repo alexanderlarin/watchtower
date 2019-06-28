@@ -20,8 +20,10 @@ def grab_loop(config, stream, channel, exchange):
     logger.info('check init frame from stream')
     image = stream.read()
 
-    logger.info('init motion detector')
-    motion = Motion(image_size=(width, height), **config['motion_detector'])
+    motion_detector_config = config['motion_detector']
+    logger.info('init motion detector: {motion_detector_config}'
+                .format(motion_detector_config=motion_detector_config))
+    motion = Motion(image_size=(width, height), **motion_detector_config)
 
     logger.info('reset motion detector')
     motion.reset(image, image)
@@ -29,6 +31,7 @@ def grab_loop(config, stream, channel, exchange):
     while True:
         image = stream.read()
         if image is None:
+            logger.info('stream end')
             break
 
         frame = Frame(image, 0, 0, width, height)
@@ -36,6 +39,7 @@ def grab_loop(config, stream, channel, exchange):
 
         if len(rects):
             # TODO: use biggest rect, not a first
+            # TODO: detector sizes is redundant feature after face detector became single
             motion_frame = frame.fit_cut(*rects[0], detector_sizes)
             logger.info('publish frame {bounds}'.format(bounds=motion_frame.bounds))
             producer.publish(motion_frame.to_json(),

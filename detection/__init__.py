@@ -64,25 +64,19 @@ class Motion:
 
 
 class Face:
-    def __init__(self, image_size, prototxt_filename, model_filename, mean, threshold, scale_factor=1.):
+    def __init__(self, prototxt_filename, model_filename, blob_size, mean, threshold, scale_factor=1.):
         assert 0. < threshold <= 1.
 
-        self._image_size = image_size
         self._network = cv2.dnn.readNetFromCaffe(prototxt_filename, model_filename)
+        self._blob_size = tuple(blob_size)
         self._mean = mean
         self._threshold = threshold
         self._scale_factor = scale_factor
 
-    @property
-    def image_size(self):
-        return self._image_size
-
     def detect(self, image):
-        assert image.shape[1::-1] == self._image_size
-
         height, width = image.shape[:2]
 
-        blob = cv2.dnn.blobFromImage(image, self._scale_factor, (width, height), self._mean)
+        blob = cv2.dnn.blobFromImage(image, self._scale_factor, self._blob_size, self._mean)
         self._network.setInput(blob)
 
         detections = self._network.forward()

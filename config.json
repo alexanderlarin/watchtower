@@ -1,6 +1,6 @@
 {
   "stream": {
-    "size": [640, 480],
+    "size": [1920, 1080],
     "cuts": [
       [0.25, 0.5],
       [0.5, 1.0],
@@ -11,20 +11,21 @@
     "prototxt_filename": "network_models/deploy.prototxt",
     "model_filename": "network_models/res10_300x300_ssd_iter_140000.caffemodel",
     "mean": [104.0, 177.0, 123.0],
+    "blob_size": [900, 900],
     "threshold":  0.4,
     "scale_factor": 1.0
   },
   "motion_detector": {
     "background_alpha": 0.9,
     "foreground_alpha": 0.1,
-    "threshold": 20,
+    "threshold": 15,
     "blur_size": 5,
-    "min_area": 1500,
+    "min_area": 1000,
     "compress_size": [320, 270]
   },
   "centroid_tracker": {
     "max_disappeared": 20,
-    "max_distance": 300
+    "max_distance": 75
   },
 
   "logging": {        
@@ -38,7 +39,7 @@
         },
         "handlers": {
             "console": {
-                "level": "DEBUG",
+              "level": "DEBUG",
               "formatter": "default",
               "class": "logging.StreamHandler"
             }
