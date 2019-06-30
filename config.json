@@ -1,17 +1,12 @@
 {
   "stream": {
-    "size": [1920, 1080],
-    "cuts": [
-      [0.25, 0.5],
-      [0.5, 1.0],
-      [1.0, 1.0]
-    ]
+    "size": [1920, 1080]
   },
   "face_detector": {
     "prototxt_filename": "network_models/deploy.prototxt",
     "model_filename": "network_models/res10_300x300_ssd_iter_140000.caffemodel",
     "mean": [104.0, 177.0, 123.0],
-    "blob_size": [900, 900],
+    "blob_size": [500, 500],
     "threshold":  0.4,
     "scale_factor": 1.0
   },
@@ -28,27 +23,40 @@
     "max_distance": 75
   },
 
-  "logging": {        
-        "version": 1,
-        "disable_existing_loggers": 0,
-        "formatters": {
-            "default": {
-                "format": "[%(asctime)s][%(levelname)s][%(name)s] %(message)s",
-                "datefmt":  "%H:%M:%S"
-            }
-        },
-        "handlers": {
-            "console": {
-              "level": "DEBUG",
-              "formatter": "default",
-              "class": "logging.StreamHandler"
-            }
-        },
-        "loggers": {
-          "": {
-            "level": "DEBUG",
-            "handlers": ["console"]
-          }
-        }
+  "logging": {
+    "version": 1,
+    "disable_existing_loggers": 0,
+    "formatters": {
+      "default": {
+        "format": "[%(asctime)s][%(levelname)s][%(name)s] %(message)s",
+        "datefmt":  "%H:%M:%S"
+      }
+    },
+    "handlers": {
+      "console": {
+        "level": "DEBUG",
+        "formatter": "default",
+        "class": "logging.StreamHandler"
+      },
+      "file": {
+        "level": "INFO",
+        "class": "logging.handlers.WatchedFileHandler",
+        "formatter": "default",
+        "filename": "debug.log",
+        "mode": "a",
+        "encoding": "utf-8"
+      }
+    },
+    "loggers": {
+      "": {
+        "level": "DEBUG",
+        "handlers": ["console"]
+      },
+      "watch": {
+        "level": "DEBUG",
+        "handlers": ["file"],
+        "propagate": 1
+      }
     }
+  }
 }

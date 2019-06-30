@@ -4,3 +4,4 @@ images/
 samples/
 
 __pycache__
+*.log
